@@ -1,3 +1,14 @@
 {
-  "name": "zilbesveldoswinkos"
+  "name": "zilbesveldoswinkos",
+  "dependencies": {
+    "@lowdefy/server-node": "3.23.2"
+  },
+  "devDependencies": {
+    "lowdefy": "3.23.2"
+  },
+  "scripts": {
+    "init": "lowdefy init",
+    "build": "lowdefy build",
+    "start": "lowdefy-server"
+  }
 }
