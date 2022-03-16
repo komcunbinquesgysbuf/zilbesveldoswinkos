@@ -7,6 +7,7 @@
     "lowdefy": "3.23.2"
   },
   "scripts": {
+    "develop": "lowdefy dev",
     "init": "lowdefy init",
     "build": "lowdefy build",
     "start": "lowdefy-server"
