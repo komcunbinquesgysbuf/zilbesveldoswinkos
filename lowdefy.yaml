@@ -1,7 +1,17 @@
-
 lowdefy: 3.23.2
 name: Lowdefy starter
-
+app:
+  html:
+    appendHead: |
+      <script type="module" src="/public/crypto.js"></script>
+connections:
+  - id: mailer
+    type: SendGridMail
+    properties:
+      apiKey:
+        _secret: SENDGRID_API_KEY
+      from:
+        _secret: SENDGRID_FROM_ADDRESS
 pages:
   - id: welcome
     type: PageHeaderMenu
@@ -48,4 +58,98 @@ pages:
               type: secondary
               content: |
                 Made by a Lowdefy 🤖
+  - id: email
+    type: PageSiderMenu
+    properties:
+      title: Send email
+    requests:
+      - id: send_confirmation
+        type: SendGridMailSend
+        connectionId: mailer
+        properties:
+          to:
+            _state: mailto
+          subject:
+            _nunjucks: Reminder for {{name}}
+          text:
+            _nunjucks: |
+              Hi {{name}}
 
+              here's your encrypted data.
+
+              cipher: {{ciphertext}}
+              key:    {{encryption_key}}
+
+              Cheers
+    areas:
+      content:
+        blocks:
+          - id: name
+            type: TextInput
+            properties:
+              label:
+                inline: true
+              title: Your name
+          - id: mailto
+            type: TextInput
+            required: true
+            validate:
+              - message: Invalid email address.
+                status: error
+                pass:
+                  _regex:
+                    pattern: ^[a-z0-9~!$%\-_=+:.?\x80-\xff]+@([a-z0-9]+(--?[a-z0-9]+)*\.)+[a-z0-9]+$
+                    flags: i
+            properties:
+              label:
+                inline: true
+              title: Your email address
+          - id: block_id
+            type: Button
+            properties:
+              icon: SendOutlined
+              title: Send reminder
+            events:
+              onClick:
+                - id: validate_all
+                  type: Validate
+                - id: extract_mailbox_name
+                  type: SetState
+                  params:
+                    mailbox_name:
+                      _string.replace:
+                        on:
+                          _state: mailto
+                        regex: "@.+"
+                        newSubstr: ""
+                - id: create_aes_gcm_key
+                  type: JsAction
+                  params:
+                    name: aesGcmCreateKey
+                - id: encrypt_aes_gcm
+                  type: JsAction
+                  params:
+                    name: aesGcmEncrypt
+                    args:
+                      - _state: mailto
+                      - _actions: create_aes_gcm_key.response
+                - id: set_encryption_key
+                  type: SetState
+                  params:
+                    encryption_key:
+                      _actions: create_aes_gcm_key.response
+                - id: set_ciphertext
+                  type: SetState
+                  params:
+                    ciphertext:
+                      _actions: encrypt_aes_gcm.response
+                - id: ensure_name
+                  type: SetState
+                  params:
+                    name:
+                      _if_none:
+                        - _state: name
+                        - _state: mailbox_name
+                - id: send_confirmation
+                  type: Request
+                  params: send_confirmation
