@@ -13,19 +13,17 @@ if (typeof window !== 'undefined' && 'lowdefy' in window && 'crypto' in window &
             await window.crypto.subtle.generateKey({name: 'AES-GCM', length: 256}, true, ['encrypt', 'decrypt'])
         )
     ));
-    window.lowdefy.registerJsAction('aesGcmEncrypt', async (ctx, m, k) => {
-        console.log(m, k);
-        return (async iv => [
-                iv,
-                await window.crypto.subtle.encrypt(
-                    {name: 'AES-GCM', iv},
-                    await importKey(base64UrlToBuffer(k)),
-                    new TextEncoder().encode(m)
-                )
-            ].map(bufferToBase64Url).join('')
-        )(window.crypto.getRandomValues(new Uint8Array(12)));
-    });
-    window.lowdefy.registerJsAction('aesGcmDecrypt', async (ctx, c, k) => (async (iv, cb, kb) => new TextDecoder()
-            .decode(await window.crypto.subtle.decrypt({name: 'AES-GCM', iv}, await importKey(kb), cb))
+    window.lowdefy.registerJsAction('aesGcmEncrypt', async (ctx, m, k) => (async iv => [
+        iv,
+        await window.crypto.subtle.encrypt(
+            {name: 'AES-GCM', iv},
+            await importKey(base64UrlToBuffer(k)),
+            new TextEncoder().encode(m)
+        )
+    ].map(bufferToBase64Url).join(''))(window.crypto.getRandomValues(new Uint8Array(12))));
+    window.lowdefy.registerJsAction('aesGcmDecrypt', async (ctx, c, k) => (
+        async (iv, cb, kb) => new TextDecoder().decode(
+            await window.crypto.subtle.decrypt({name: 'AES-GCM', iv}, await importKey(kb), cb)
+        )
     )(...[c.substr(0, 16), c.substr(16), k].map(base64UrlToBuffer)));
 }
