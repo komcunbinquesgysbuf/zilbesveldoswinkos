@@ -12,12 +12,14 @@ connections:
         _secret: SENDGRID_API_KEY
       from:
         _secret: SENDGRID_FROM_ADDRESS
-  - id: postgres
+  - id: database
     type: Knex
     properties:
-      client: postgres
+      client:
+        _secret: KNEX_CLIENT
       connection:
-        _secret: PG_CONNECTION_STRING
+        _json.parse:
+          _secret: KNEX_CONNECTION
 pages:
   - id: welcome
     type: PageHeaderMenu
@@ -89,7 +91,7 @@ pages:
               Cheers
       - id: db_insert
         type: KnexRaw
-        connectionId: postgres
+        connectionId: database
         properties:
           query: insert into confirmation (id, data) values (?, ?)
           parameters:
@@ -181,12 +183,17 @@ pages:
       title: Check data
     requests:
       - id: db_select
-        type: KnexRaw
-        connectionId: postgres
+        type: KnexBuilder
+        connectionId: database
         properties:
-          query: select data from confirmation where id = ?
-          parameters:
-            - _state: record_id
+          query:
+            - select:
+                - data
+            - from:
+                - confirmation
+            - where:
+                - id
+                - _state: record_id
     areas:
       content:
         blocks:
