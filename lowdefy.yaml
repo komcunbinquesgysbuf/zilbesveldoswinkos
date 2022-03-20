@@ -20,6 +20,7 @@ connections:
       connection:
         _json.parse:
           _secret: KNEX_CONNECTION
+      useNullAsDefault: true
 pages:
   - id: welcome
     type: PageHeaderMenu
@@ -219,19 +220,21 @@ pages:
                 - id: load_data
                   type: Request
                   params: db_select
-#                - id: decrypt_aes_gcm
-#                  type: JsAction
-#                  params:
-#                    name: aesGcmDecrypt
-#                    args:
-#                      - _action: load_data.response
-#                      - _state: secret_key
+                - id: decrypt_aes_gcm
+                  type: JsAction
+                  params:
+                    name: aesGcmDecrypt
+                    args:
+                      - _get:
+                          key: 0.0.data
+                          from:
+                            _actions: load_data.response
+                      - _state: secret_key
                 - id: set_decrypted_message
                   type: SetState
                   params:
                     message:
-                      _json.stringify:
-                        _actions: load_data.response
+                      _actions: decrypt_aes_gcm.response
           - id: output
             type: Alert
             properties:
