@@ -12,6 +12,12 @@ connections:
         _secret: SENDGRID_API_KEY
       from:
         _secret: SENDGRID_FROM_ADDRESS
+  - id: postgres
+    type: Knex
+    properties:
+      client: postgres
+      connection:
+        _secret: PG_CONNECTION_STRING
 pages:
   - id: welcome
     type: PageHeaderMenu
@@ -77,10 +83,18 @@ pages:
 
               here's your encrypted data.
 
-              cipher: {{ciphertext}}
+              record: {{record_id}}
               key:    {{encryption_key}}
 
               Cheers
+      - id: db_insert
+        type: KnexRaw
+        connectionId: postgres
+        properties:
+          query: insert into confirmation (id, data) values (?, ?)
+          parameters:
+            - _state: record_id
+            - _state: ciphertext
     areas:
       content:
         blocks:
@@ -150,6 +164,14 @@ pages:
                       _if_none:
                         - _state: name
                         - _state: mailbox_name
+                - id: set_record_id
+                  type: SetState
+                  params:
+                    record_id:
+                      _uuid.v4: null
+                - id: store_data
+                  type: Request
+                  params: db_insert
                 - id: send_confirmation
                   type: Request
                   params: send_confirmation
