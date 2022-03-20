@@ -223,7 +223,7 @@ pages:
                   type: SetState
                   params:
                     message:
-                      _json:
+                      _json.stringify:
                         _actions: load_data.response
           - id: output
             type: Alert
