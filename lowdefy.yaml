@@ -175,3 +175,58 @@ pages:
                 - id: send_confirmation
                   type: Request
                   params: send_confirmation
+  - id: check
+    type: PageSiderMenu
+    properties:
+      title: Check data
+    requests:
+      - id: db_select
+        type: KnexRaw
+        connectionId: postgres
+        properties:
+          query: select data from confirmation where id = ?
+          parameters:
+            - _state: record_id
+    areas:
+      content:
+        blocks:
+          - id: record_id
+            type: TextInput
+            properties:
+              label:
+                inline: true
+              title: Your record ID
+          - id: secret_key
+            type: TextInput
+            properties:
+              label:
+                inline: true
+              title: Your secret key
+          - id: block_id
+            type: Button
+            properties:
+              icon: SendOutlined
+              title: Check data
+            events:
+              onClick:
+                - id: load_data
+                  type: Request
+                  params: db_select
+#                - id: decrypt_aes_gcm
+#                  type: JsAction
+#                  params:
+#                    name: aesGcmDecrypt
+#                    args:
+#                      - _action: load_data.response
+#                      - _state: secret_key
+                - id: set_decrypted_message
+                  type: SetState
+                  params:
+                    message:
+                      _json:
+                        _actions: load_data.response
+          - id: output
+            type: Alert
+            properties:
+              message:
+                - _state: message
