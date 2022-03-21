@@ -1,0 +1,76 @@
+id: confirm
+type: PageSiderMenu
+properties:
+  title: Check data
+layout:
+  contentGutter: 16
+requests:
+  - id: db_select
+    type: KnexBuilder
+    connectionId: database
+    properties:
+      query:
+        - select:
+            - data
+        - from:
+            - confirmation
+        - where:
+            - id
+            - _url_query: r
+areas:
+  content:
+    blocks:
+      - id: record_id
+        type: Descriptions
+        properties:
+          column: 1
+          bordered: true
+          colon: false
+          items:
+            - label: Your record ID
+              value:
+                _url_query: r
+            - label: Stored data (encrypted)
+              value:
+                _state: record_data
+            - label: Decrypted data (enter key below)
+              value:
+                _state: message
+      - id: secret_key
+        type: TextInput
+        properties:
+          label:
+            inline: true
+          title: Your secret key
+      - id: block_id
+        type: Button
+        properties:
+          icon: SendOutlined
+          title: Check data
+        events:
+          onClick:
+            - id: decrypt_aes_gcm
+              type: JsAction
+              params:
+                name: aesGcmDecrypt
+                args:
+                  - _state: record_data
+                  - _state: secret_key
+            - id: set_decrypted_message
+              type: SetState
+              params:
+                message:
+                  _actions: decrypt_aes_gcm.response
+events:
+  onEnter:
+    - id: load_data
+      type: Request
+      params: db_select
+    - id: set_record_data
+      type: SetState
+      params:
+        record_data:
+          _get:
+            key: 0.0.data
+            from:
+              _actions: load_data.response
