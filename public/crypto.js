@@ -10,7 +10,7 @@ if (typeof window !== 'undefined' && 'lowdefy' in window && 'crypto' in window &
     window.lowdefy.registerJsAction('aesGcmCreateKey', async (ctx) => bufferToBase64Url(
         await window.crypto.subtle.exportKey(
             'raw',
-            await window.crypto.subtle.generateKey({name: 'AES-GCM', length: 256}, true, ['encrypt', 'decrypt'])
+            await window.crypto.subtle.generateKey({name: 'AES-GCM', length: 128}, true, ['encrypt', 'decrypt'])
         )
     ));
     window.lowdefy.registerJsAction('aesGcmEncrypt', async (ctx, m, k) => (async iv => [
