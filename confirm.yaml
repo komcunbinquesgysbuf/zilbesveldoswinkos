@@ -43,13 +43,22 @@ areas:
           label:
             inline: true
           title: Your secret key
-      - id: block_id
+        required: true
+        validate:
+          - message: Invalid key
+            status: error
+            pass:
+              _regex:
+                pattern: ^[a-zA-Z0-9\-_]{22}$
+      - id: decrypt_button
         type: Button
         properties:
-          icon: SendOutlined
-          title: Check data
+          icon: UnlockOutlined
+          title: Decrypt
         events:
           onClick:
+            - id: validate_all
+              type: Validate
             - id: decrypt_aes_gcm
               type: JsAction
               params:
