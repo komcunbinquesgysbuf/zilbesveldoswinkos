@@ -29,14 +29,10 @@ if (typeof window !== 'undefined' && 'lowdefy' in window && 'crypto' in window &
     registerJsAction(
         'aesGcmEncrypt',
         async (ctx, message, key) => (
-            async iv => [
+            async (iv, mb, kb) => [
                 iv,
-                await crypto.subtle.encrypt(
-                    {...algo, iv},
-                    await importRawKey(urlToBuffer(key)),
-                    new TextEncoder().encode(message)
-                )
+                await crypto.subtle.encrypt({...algo, iv}, await importRawKey(kb), mb)
             ].map(bufferToUrl).join('')
-        )(crypto.getRandomValues(new Uint8Array(12)))
+        )(crypto.getRandomValues(new Uint8Array(12)), new TextEncoder().encode(message), urlToBuffer(key))
     );
 }
