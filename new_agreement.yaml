@@ -2,6 +2,7 @@ id: new_agreement
 type: PageSiderMenu
 properties:
   title: Start a new Agreement
+  _ref: logo.yaml
 layout:
   contentGutter: 16
 requests:

@@ -37,6 +37,7 @@ pages:
     type: PageSiderMenu
     properties:
       title: You've got mail
+      _ref: logo.yaml
     areas:
       content:
         blocks:

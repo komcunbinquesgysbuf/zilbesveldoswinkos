@@ -1,0 +1,5 @@
+logo:
+  src: /public/icon.png
+  style:
+    max-width: 64px
+    max-height: 64px

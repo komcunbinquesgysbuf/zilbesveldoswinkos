@@ -2,6 +2,7 @@ id: confirm
 type: PageSiderMenu
 properties:
   title: Check data
+  _ref: logo.yaml
 layout:
   contentGutter: 16
 requests:
