@@ -11,7 +11,10 @@ requests:
     connectionId: mailer
     properties:
       to:
-        _state: mailto
+        name:
+          _state: name
+        email:
+          _state: mailto
       subject:
         _nunjucks: Email validation for {{name}}
       text:
@@ -23,7 +26,7 @@ requests:
 
           Before you can continue, we'd like to make sure, it was really you.
 
-          Please go to {{base_url}}/confirm/?r={{record_id}}
+          Please go to {{base_url}}/confirm/?token={{token}}
           and enter your key as given below.
 
           We generated the following access key for you: {{encryption_key}}
@@ -37,14 +40,16 @@ requests:
 
           Cheers
           Team {{host}}
-  - id: db_insert
-    type: KnexRaw
-    connectionId: database
+  - id: create_token
+    type: AxiosHttp
+    connectionId: jwt_api
     properties:
-      query: insert into confirmation (id, data) values (?, ?)
-      parameters:
-        - _state: record_id
-        - _state: ciphertext
+      method: post
+      headers:
+        Content-Type: application/json
+      data:
+        sub:
+          _state: ciphertext
 areas:
   content:
     blocks:
@@ -57,6 +62,12 @@ areas:
         type: TextInput
         properties:
           title: Your name
+        validate:
+          - message: The name contains disallowed characters.
+            status: error
+            pass:
+              _regex:
+                pattern: ^[^"=?<>]*$
       - id: mailto
         type: TextInput
         required: true
@@ -65,10 +76,29 @@ areas:
             status: error
             pass:
               _regex:
-                pattern: ^[a-z0-9~!$%\-_=+:.?\x80-\xff]+@([a-z0-9]+(--?[a-z0-9]+)*\.)+[a-z0-9]+$
+                pattern: ^[a-z0-9~!$%\-_+:.\x80-\xff]+@([a-z0-9]+(--?[a-z0-9]+)*\.)+[a-z0-9]+$
                 flags: i
         properties:
           title: Your email address
+      - id: data
+        type: Descriptions
+        properties:
+          column: 1
+          bordered: true
+          colon: false
+          items:
+            - label: mailbox_name
+              value:
+                _state: mailbox_name
+            - label: encryption_key
+              value:
+                _state: encryption_key
+            - label: ciphertext
+              value:
+                _state: ciphertext
+            - label: token
+              value:
+                _state: token
       - id: block_id
         type: Button
         properties:
@@ -76,8 +106,6 @@ areas:
           title: Submit
         events:
           onClick:
-            - id: validate_all
-              type: Validate
             - id: extract_mailbox_name
               type: SetState
               params:
@@ -87,11 +115,27 @@ areas:
                       _state: mailto
                     regex: "@.+"
                     newSubstr: ""
+            - id: ensure_name
+              type: SetState
+              params:
+                name:
+                  _if_none:
+                    - _state: name
+                    - _state: mailbox_name
+            - id: validate_all
+              type: Validate
             - id: create_aes_gcm_key
               type: JsAction
               params:
                 name: aesGcmCreateKey
-            - id: encrypt_aes_gcm
+            - id: encrypt_name
+              type: JsAction
+              params:
+                name: aesGcmEncrypt
+                args:
+                  - _state: name
+                  - _actions: create_aes_gcm_key.response
+            - id: encrypt_mailto
               type: JsAction
               params:
                 name: aesGcmEncrypt
@@ -107,22 +151,22 @@ areas:
               type: SetState
               params:
                 ciphertext:
-                  _actions: encrypt_aes_gcm.response
-            - id: ensure_name
-              type: SetState
-              params:
-                name:
-                  _if_none:
-                    - _state: name
-                    - _state: mailbox_name
-            - id: set_record_id
-              type: SetState
-              params:
-                record_id:
-                  _uuid.v4: null
-            - id: store_data
+                  _array.join:
+                    separator: .
+                    on:
+                      - _actions: encrypt_name.response
+                      - _actions: encrypt_mailto.response
+            - id: create_token
               type: Request
-              params: db_insert
+              params: create_token
+            - id: set_token
+              type: SetState
+              params:
+                token:
+                  _get:
+                    key: 0.data
+                    from:
+                      _actions: create_token.response
             - id: set_host
               type: SetState
               params:

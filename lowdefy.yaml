@@ -12,19 +12,10 @@ connections:
         _secret: SENDGRID_API_KEY
       from:
         _secret: SENDGRID_FROM_ADDRESS
-  - id: database
-    type: Knex
-    properties:
-      client:
-        _secret: KNEX_CLIENT
-      connection:
-        _json.parse:
-          _secret: KNEX_CONNECTION
-      useNullAsDefault: true
   - id: jwt_api
     type: AxiosHttp
     properties:
-      url:
+      baseURL:
         _secret: JWT_API
 menus:
   - id: default

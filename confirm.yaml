@@ -18,6 +18,13 @@ requests:
         - where:
             - id
             - _url_query: r
+  - id: validate_token
+    type: AxiosHttp
+    connectionId: jwt_api
+    properties:
+      method: get
+      url:
+        _url_query: token
 areas:
   content:
     blocks:
@@ -28,15 +35,15 @@ areas:
           bordered: true
           colon: false
           items:
-            - label: Your record ID
-              value:
-                _url_query: r
-            - label: Stored data (encrypted)
+            - label: Transmitted data (encrypted)
               value:
                 _state: record_data
-            - label: Decrypted data (enter key below)
+            - label: Decrypted name (enter key below)
               value:
-                _state: message
+                _state: name
+            - label: Decrypted email address (enter key below)
+              value:
+                _state: mailto
       - id: secret_key
         type: TextInput
         properties:
@@ -59,28 +66,44 @@ areas:
           onClick:
             - id: validate_all
               type: Validate
-            - id: decrypt_aes_gcm
+            - id: decrypt_name
               type: JsAction
               params:
                 name: aesGcmDecrypt
                 args:
-                  - _state: record_data
+                  - _state: record_data.0
+                  - _state: secret_key
+            - id: decrypt_mailto
+              type: JsAction
+              params:
+                name: aesGcmDecrypt
+                args:
+                  - _state: record_data.1
                   - _state: secret_key
             - id: set_decrypted_message
               type: SetState
               params:
-                message:
-                  _actions: decrypt_aes_gcm.response
+                name:
+                  _actions: decrypt_name.response
+            - id: set_decrypted_message
+              type: SetState
+              params:
+                mailto:
+                  _actions: decrypt_mailto.response
 events:
   onEnter:
-    - id: load_data
+    - id: validate_token
       type: Request
-      params: db_select
+      params: validate_token
     - id: set_record_data
       type: SetState
       params:
         record_data:
-          _get:
-            key: 0.0.data
-            from:
-              _actions: load_data.response
+          _string.split:
+            separator: .
+            on:
+              _get:
+                key: 0.data.sub
+                from:
+                  _log:
+                    _actions: validate_token.response
