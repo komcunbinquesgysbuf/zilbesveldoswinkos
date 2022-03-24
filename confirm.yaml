@@ -105,5 +105,4 @@ events:
               _get:
                 key: 0.data.sub
                 from:
-                  _log:
-                    _actions: validate_token.response
+                  _actions: validate_token.response
