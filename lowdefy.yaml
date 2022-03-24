@@ -21,6 +21,11 @@ connections:
         _json.parse:
           _secret: KNEX_CONNECTION
       useNullAsDefault: true
+  - id: jwt_api
+    type: AxiosHttp
+    properties:
+      url:
+        _secret: JWT_API
 menus:
   - id: default
     links:
