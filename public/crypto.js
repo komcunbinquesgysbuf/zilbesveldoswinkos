@@ -3,12 +3,11 @@
 if (typeof window !== 'undefined' && 'lowdefy' in window && 'crypto' in window && 'subtle' in window.crypto) {
     const [algo, usages] = [{name: 'AES-GCM'}, ['encrypt', 'decrypt']];
     const {atob, btoa, crypto, lowdefy: {registerJsAction}} = window;
-    const urlToBuffer = url => Uint8Array
-        .from(atob(url.replaceAll('_', '/').replaceAll('-', '+')).split('').map(c => c.charCodeAt(0)))
-        .buffer;
-    const bufferToUrl = buffer => btoa(Array.from(new Uint8Array(buffer)).map(c => String.fromCharCode(c)).join(''))
-        .replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+    const b64ToUrl = d => d.replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+    const bufferToUrl = buffer => b64ToUrl(btoa(String.fromCharCode(...new Uint8Array(buffer))));
     const importRawKey = async key => await crypto.subtle.importKey('raw', key, algo, true, usages);
+    const urlToB64 = u => u.replaceAll('_', '/').replaceAll('-', '+')
+    const urlToBuffer = url => Uint8Array.from(atob(urlToB64(url)).split('').map(c => c.charCodeAt(0))).buffer;
 
     registerJsAction(
         'aesGcmCreateKey',
