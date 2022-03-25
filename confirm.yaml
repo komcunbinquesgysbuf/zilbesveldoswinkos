@@ -57,6 +57,14 @@ areas:
                       - id: set_decrypted_message
                         type: SetState
                         params: { mailto: { _actions: decrypt_mailto.response } }
+                      - id: link_profile
+                        type: Link
+                        params:
+                          pageId: profile
+                          input:
+                            name: { _actions: decrypt_name.response }
+                            mailto: { _actions: decrypt_mailto.response }
+                            key: { _state: secret_key }
                     catch:
                       - id: reset
                         type: Reset

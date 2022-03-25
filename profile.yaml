@@ -1,0 +1,21 @@
+id: profile
+type: PageSiderMenu
+properties:
+  title: Check data
+  _ref: logo.yaml
+layout:
+  contentGutter: 16
+areas:
+  header:
+    _ref: header.yaml
+  content:
+    blocks:
+      - id: data
+        type: Descriptions
+        properties:
+          bordered: true
+          column: 1
+          items:
+            - { label: Name, value: { _input: name } }
+            - { label: Email address, value: { _input: mailto } }
+            - { label: Secret key, value: { _input: key } }

@@ -18,6 +18,7 @@ menus:
 pages:
   - _ref: new_agreement.yaml
   - _ref: confirm.yaml
+  - _ref: profile.yaml
   - id: confirmation_sent
     type: PageSiderMenu
     properties: { title: You've got mail, _ref: logo.yaml }
