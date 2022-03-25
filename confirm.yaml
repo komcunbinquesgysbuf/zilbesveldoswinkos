@@ -6,25 +6,12 @@ properties:
 layout:
   contentGutter: 16
 requests:
-  - id: db_select
-    type: KnexBuilder
-    connectionId: database
-    properties:
-      query:
-        - select:
-            - data
-        - from:
-            - confirmation
-        - where:
-            - id
-            - _url_query: r
   - id: validate_token
     type: AxiosHttp
     connectionId: jwt_api
     properties:
       method: get
-      url:
-        _url_query: token
+      url: { _string.concat: [ 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.', _get: { from: { _object.keys: { _url_query: true } }, key: 0 } ] }
 areas:
   content:
     blocks:
@@ -35,61 +22,36 @@ areas:
           bordered: true
           colon: false
           items:
-            - label: Transmitted data (encrypted)
-              value:
-                _state: record_data
-            - label: Decrypted name (enter key below)
-              value:
-                _state: name
-            - label: Decrypted email address (enter key below)
-              value:
-                _state: mailto
+            - { label: Transmitted data (encrypted), value: { _state: record_data } }
+            - { label: Decrypted name (enter key below), value: { _state: name } }
+            - { label: Decrypted email address (enter key below), value: { _state: mailto } }
       - id: secret_key
         type: TextInput
-        properties:
-          label:
-            inline: true
-          title: Your secret key
+        properties: { label: { inline: true }, title: Your secret key }
         required: true
         validate:
           - message: Invalid key
             status: error
-            pass:
-              _regex:
-                pattern: ^[a-zA-Z0-9\-_]{22}$
+            pass: { _regex: { pattern: '^[a-zA-Z0-9\-_]{22}$' } }
       - id: decrypt_button
         type: Button
-        properties:
-          icon: UnlockOutlined
-          title: Decrypt
+        properties: { icon: UnlockOutlined, title: Decrypt }
         events:
           onClick:
             - id: validate_all
               type: Validate
             - id: decrypt_name
               type: JsAction
-              params:
-                name: aesGcmDecrypt
-                args:
-                  - _state: record_data.0
-                  - _state: secret_key
+              params: { name: aesGcmDecrypt, args: [ _state: record_data.0, _state: secret_key ] }
             - id: decrypt_mailto
               type: JsAction
-              params:
-                name: aesGcmDecrypt
-                args:
-                  - _state: record_data.1
-                  - _state: secret_key
+              params: { name: aesGcmDecrypt, args: [ _state: record_data.1, _state: secret_key ] }
             - id: set_decrypted_message
               type: SetState
-              params:
-                name:
-                  _actions: decrypt_name.response
+              params: { name: { _actions: decrypt_name.response } }
             - id: set_decrypted_message
               type: SetState
-              params:
-                mailto:
-                  _actions: decrypt_mailto.response
+              params: { mailto: { _actions: decrypt_mailto.response } }
 events:
   onEnter:
     - id: validate_token
@@ -97,12 +59,4 @@ events:
       params: validate_token
     - id: set_record_data
       type: SetState
-      params:
-        record_data:
-          _string.split:
-            separator: .
-            on:
-              _get:
-                key: 0.data.sub
-                from:
-                  _actions: validate_token.response
+      params: { record_data: { _string.split: { on: { _get: { key: 0.data.sub, from: { _actions: validate_token.response } } }, separator: . } } }

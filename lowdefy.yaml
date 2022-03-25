@@ -1,39 +1,26 @@
 lowdefy: 3.23.2
 name: Lowdefy starter
-app:
-  html:
-    appendHead: |
-      <script type="module" src="/public/crypto.js"></script>
+app: { html: { appendHead: <script type="module" src="/public/crypto.js"></script> } }
 connections:
   - id: mailer
     type: SendGridMail
-    properties:
-      apiKey:
-        _secret: SENDGRID_API_KEY
-      from:
-        _secret: SENDGRID_FROM_ADDRESS
+    properties: { apiKey: { _secret: SENDGRID_API_KEY }, from: { _secret: SENDGRID_FROM_ADDRESS } }
   - id: jwt_api
     type: AxiosHttp
-    properties:
-      baseURL:
-        _secret: JWT_API
+    properties: { baseURL: { _secret: JWT_API } }
 menus:
   - id: default
     links:
       - id: new_agreement
         type: MenuLink
         pageId: new_agreement
-        properties:
-          title: New Agreement
-          icon: StarOutlined
+        properties: { title: New Agreement, icon: StarOutlined }
 pages:
   - _ref: new_agreement.yaml
   - _ref: confirm.yaml
   - id: confirmation_sent
     type: PageSiderMenu
-    properties:
-      title: You've got mail
-      _ref: logo.yaml
+    properties: { title: You've got mail, _ref: logo.yaml }
     areas:
       content:
         blocks:
@@ -42,7 +29,5 @@ pages:
             properties:
               icon: MailOutlined
               status: success
-              subTitle: >-
-                Please check your inbox and follow the instructions given in the email to
-                continue.
+              subTitle: Please check your inbox and follow the instructions given in the email to continue.
               title: The email was sent

@@ -1,8 +1,6 @@
 id: new_agreement
 type: PageSiderMenu
-properties:
-  title: Start a new Agreement
-  _ref: logo.yaml
+properties: { title: Start a new Agreement, _ref: logo.yaml }
 layout:
   contentGutter: 16
 requests:
@@ -10,13 +8,8 @@ requests:
     type: SendGridMailSend
     connectionId: mailer
     properties:
-      to:
-        name:
-          _state: name
-        email:
-          _state: mailto
-      subject:
-        _nunjucks: Email validation for {{name}}
+      to: { name: { _state: name }, email: { _state: mailto } }
+      subject: { _nunjucks: 'Email validation for {{name}}' }
       text:
         _nunjucks: |
           Hi {{name}},
@@ -26,7 +19,7 @@ requests:
 
           Before you can continue, we'd like to make sure, it was really you.
 
-          Please go to {{base_url}}/confirm/?token={{token}}
+          Please go to {{base_url}}/confirm?{{token}}
           and enter your key as given below.
 
           We generated the following access key for you: {{encryption_key}}
@@ -43,140 +36,68 @@ requests:
   - id: create_token
     type: AxiosHttp
     connectionId: jwt_api
-    properties:
-      method: post
-      headers:
-        Content-Type: application/json
-      data:
-        sub:
-          _state: ciphertext
+    properties: { method: post, headers: { Content-Type: application/json }, data: { sub: { _state: ciphertext } } }
 areas:
   content:
     blocks:
       - id: title
         type: Title
-        properties:
-          content: Start a new Agreement
-          level: 1
+        properties: { content: Start a new Agreement, level: 1 }
       - id: name
         type: TextInput
-        properties:
-          title: Your name
+        properties: { title: Your name }
         validate:
           - message: The name contains disallowed characters.
             status: error
-            pass:
-              _regex:
-                pattern: ^[^"=?<>]*$
+            pass: { _regex: { pattern: '^[^"=?<>]*$' } }
       - id: mailto
         type: TextInput
         required: true
         validate:
           - message: Invalid email address.
             status: error
-            pass:
-              _regex:
-                pattern: ^[a-z0-9~!$%\-_+:.\x80-\xff]+@([a-z0-9]+(--?[a-z0-9]+)*\.)+[a-z0-9]+$
-                flags: i
-        properties:
-          title: Your email address
-      - id: data
-        type: Descriptions
-        properties:
-          column: 1
-          bordered: true
-          colon: false
-          items:
-            - label: mailbox_name
-              value:
-                _state: mailbox_name
-            - label: encryption_key
-              value:
-                _state: encryption_key
-            - label: ciphertext
-              value:
-                _state: ciphertext
-            - label: token
-              value:
-                _state: token
+            pass: { _regex: { pattern: '^[a-z0-9~!$%\-_+:.\x80-\xff]+@([a-z0-9]+(--?[a-z0-9]+)*\.)+[a-z0-9]+$', flags: i } }
+        properties: { title: Your email address }
       - id: block_id
         type: Button
-        properties:
-          icon: SendOutlined
-          title: Submit
+        properties: { icon: SendOutlined, title: Submit }
         events:
           onClick:
             - id: extract_mailbox_name
               type: SetState
-              params:
-                mailbox_name:
-                  _string.replace:
-                    on:
-                      _state: mailto
-                    regex: "@.+"
-                    newSubstr: ""
+              params: { mailbox_name: { _string.replace: { on: { _state: mailto }, regex: '@.+', newSubstr: '' } } }
             - id: ensure_name
               type: SetState
-              params:
-                name:
-                  _if_none:
-                    - _state: name
-                    - _state: mailbox_name
+              params: { name: { _if_none: [ _state: name, _state: mailbox_name ] } }
             - id: validate_all
               type: Validate
             - id: create_aes_gcm_key
               type: JsAction
-              params:
-                name: aesGcmCreateKey
+              params: { name: aesGcmCreateKey }
             - id: encrypt_name
               type: JsAction
-              params:
-                name: aesGcmEncrypt
-                args:
-                  - _state: name
-                  - _actions: create_aes_gcm_key.response
+              params: { name: aesGcmEncrypt, args: [ _state: name, _actions: create_aes_gcm_key.response ] }
             - id: encrypt_mailto
               type: JsAction
-              params:
-                name: aesGcmEncrypt
-                args:
-                  - _state: mailto
-                  - _actions: create_aes_gcm_key.response
+              params: { name: aesGcmEncrypt, args: [ _state: mailto, _actions: create_aes_gcm_key.response ] }
             - id: set_encryption_key
               type: SetState
-              params:
-                encryption_key:
-                  _actions: create_aes_gcm_key.response
+              params: { encryption_key: { _actions: create_aes_gcm_key.response } }
             - id: set_ciphertext
               type: SetState
-              params:
-                ciphertext:
-                  _array.join:
-                    separator: .
-                    on:
-                      - _actions: encrypt_name.response
-                      - _actions: encrypt_mailto.response
+              params: { ciphertext: { _array.join: { on: [ _actions: encrypt_name.response, _actions: encrypt_mailto.response ], separator: . } } }
             - id: create_token
               type: Request
               params: create_token
             - id: set_token
               type: SetState
-              params:
-                token:
-                  _get:
-                    key: 0.data
-                    from:
-                      _actions: create_token.response
+              params: { token: { _string.replace: { on: { _get: { key: 0.data, from: { _actions: create_token.response } } }, regex: '^[^.]+\.', newSubstr: '' } } }
             - id: set_host
               type: SetState
-              params:
-                host:
-                  _location: host
+              params: { host: { _location: host } }
             - id: set_base_url
               type: SetState
-              params:
-                base_url:
-                  _location: origin
+              params: { base_url: { _location: origin } }
             - id: send_confirmation
               type: Request
               params: send_confirmation
