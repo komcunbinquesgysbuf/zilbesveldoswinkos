@@ -54,9 +54,15 @@ areas:
               params: { mailto: { _actions: decrypt_mailto.response } }
 events:
   onEnter:
-    - id: validate_token
-      type: Request
-      params: validate_token
-    - id: set_record_data
-      type: SetState
-      params: { record_data: { _string.split: { on: { _get: { key: 0.data.sub, from: { _actions: validate_token.response } } }, separator: . } } }
+    try:
+      - id: validate_token
+        type: Request
+        params: validate_token
+        messages: { error: false }
+      - id: set_record_data
+        type: SetState
+        params: { record_data: { _string.split: { on: { _get: { key: 0.data.sub, from: { _actions: validate_token.response } } }, separator: . } } }
+    catch:
+      - id: link_away
+        type: Link
+        params: token_error

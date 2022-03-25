@@ -31,3 +31,31 @@ pages:
               status: success
               subTitle: Please check your inbox and follow the instructions given in the email to continue.
               title: The email was sent
+  - id: token_error
+    type: PageSiderMenu
+    properties: { title: Invalid token, _ref: logo.yaml }
+    areas:
+      content:
+        blocks:
+          - id: error_msg
+            type: Result
+            properties:
+              icon: ExceptionOutlined
+              status: error
+              subTitle: Something must have gone wrong with the link you followed.
+              title: Invalid token
+            areas:
+              extra:
+                blocks:
+                  - id: home_button
+                    type: Button
+                    properties:
+                      icon: HomeOutlined
+                      title: Go to home page
+                      type: default
+                    events:
+                      onClick:
+                        - id: link_home
+                          type: Link
+                          params:
+                            home: true
