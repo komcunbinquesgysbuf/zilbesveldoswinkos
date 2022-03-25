@@ -1,0 +1,9 @@
+blocks:
+  - id: header
+    type: Paragraph
+    style:
+      font-size: 120%
+      '& *':
+        color: '#dfe'
+    properties:
+      content: agree-with-me.eu

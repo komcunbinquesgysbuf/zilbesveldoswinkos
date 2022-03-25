@@ -22,6 +22,8 @@ pages:
     type: PageSiderMenu
     properties: { title: You've got mail, _ref: logo.yaml }
     areas:
+      header:
+        _ref: header.yaml
       content:
         blocks:
           - id: success_msg
@@ -35,6 +37,8 @@ pages:
     type: PageSiderMenu
     properties: { title: Invalid token, _ref: logo.yaml }
     areas:
+      header:
+        _ref: header.yaml
       content:
         blocks:
           - id: error_msg

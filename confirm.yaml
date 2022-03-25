@@ -3,8 +3,6 @@ type: PageSiderMenu
 properties:
   title: Check data
   _ref: logo.yaml
-layout:
-  contentGutter: 16
 requests:
   - id: validate_token
     type: AxiosHttp
@@ -13,45 +11,55 @@ requests:
       method: get
       url: { _string.concat: [ 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.', _get: { from: { _object.keys: { _url_query: true } }, key: 0 } ] }
 areas:
+  header:
+    _ref: header.yaml
   content:
     blocks:
-      - id: record_id
-        type: Descriptions
+      - id: result
+        type: Result
         properties:
-          column: 1
-          bordered: true
-          colon: false
-          items:
-            - { label: Transmitted data (encrypted), value: { _state: record_data } }
-            - { label: Decrypted name (enter key below), value: { _state: name } }
-            - { label: Decrypted email address (enter key below), value: { _state: mailto } }
-      - id: secret_key
-        type: TextInput
-        properties: { label: { inline: true }, title: Your secret key }
-        required: true
-        validate:
-          - message: Invalid key
-            status: error
-            pass: { _regex: { pattern: '^[a-zA-Z0-9\-_]{22}$' } }
-      - id: decrypt_button
-        type: Button
-        properties: { icon: UnlockOutlined, title: Decrypt }
-        events:
-          onClick:
-            - id: validate_all
-              type: Validate
-            - id: decrypt_name
-              type: JsAction
-              params: { name: aesGcmDecrypt, args: [ _state: record_data.0, _state: secret_key ] }
-            - id: decrypt_mailto
-              type: JsAction
-              params: { name: aesGcmDecrypt, args: [ _state: record_data.1, _state: secret_key ] }
-            - id: set_decrypted_message
-              type: SetState
-              params: { name: { _actions: decrypt_name.response } }
-            - id: set_decrypted_message
-              type: SetState
-              params: { mailto: { _actions: decrypt_mailto.response } }
+          icon: AuditOutlined
+          status: success
+          subTitle: To log in, please enter the secret access key you received from us.
+          title: Email address verified
+        layout:
+          contentGutter: 16
+        areas:
+          content:
+            blocks:
+              - id: secret_key
+                type: PasswordInput
+                properties: { label: { inline: true }, title: Your secret key, autoFocus: true }
+                required: true
+                validate:
+                  - message: Invalid key
+                    status: error
+                    pass: { _regex: { pattern: '^[a-zA-Z0-9\-_]{22}$' } }
+              - id: decrypt_button
+                type: Button
+                properties: { icon: UnlockOutlined, title: Decrypt }
+                events:
+                  onClick:
+                    try:
+                      - id: validate_all
+                        type: Validate
+                      - id: decrypt_name
+                        type: JsAction
+                        params: { name: aesGcmDecrypt, args: [ _state: record_data.0, _state: secret_key ] }
+                        messages: { error: The key you entered is invalid }
+                      - id: decrypt_mailto
+                        type: JsAction
+                        params: { name: aesGcmDecrypt, args: [ _state: record_data.1, _state: secret_key ] }
+                        messages: { error: The key you entered is invalid }
+                      - id: set_decrypted_message
+                        type: SetState
+                        params: { name: { _actions: decrypt_name.response } }
+                      - id: set_decrypted_message
+                        type: SetState
+                        params: { mailto: { _actions: decrypt_mailto.response } }
+                    catch:
+                      - id: reset
+                        type: Reset
 events:
   onEnter:
     try:

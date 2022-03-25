@@ -1,5 +1,2 @@
-logo:
-  src: /public/icon.png
-  style:
-    max-width: 64px
-    max-height: 64px
+logo: { src: /public/icon.png, style: { max-width: 64px, max-height: 64px } }
+header: { contentStyle: { width: 100% }, style: { height: 80px }, theme: light, color: '#042' }

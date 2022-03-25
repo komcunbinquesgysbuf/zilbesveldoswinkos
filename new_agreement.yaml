@@ -38,6 +38,8 @@ requests:
     connectionId: jwt_api
     properties: { method: post, headers: { Content-Type: application/json }, data: { sub: { _state: ciphertext } } }
 areas:
+  header:
+    _ref: header.yaml
   content:
     blocks:
       - id: title
