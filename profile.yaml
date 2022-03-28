@@ -10,18 +10,47 @@ areas:
     _ref: header.yaml
   content:
     blocks:
-#      - id: data
-#        type: Descriptions
-#        properties:
-#          bordered: true
-#          column: 1
-#          items:
-#            - { label: Name, value: { _input: name } }
-#            - { label: Email address, value: { _input: mailto } }
-#            - { label: Secret key, value: { _input: key } }
+      - id: data
+        type: Descriptions
+        properties:
+          bordered: true
+          column: 1
+          items:
+            - { label: input, value: { _json.stringify: { on: { _input: true } } } }
+            - { label: state, value: { _json.stringify: { on: { _state: true } } } }
       - id: title
         type: Title
         properties: { content: { _nunjucks: { template: 'Welcome back, {{name}}!', on: { name: { _input: name } } } } }
+      - id: document
+        type: FileReader
+        properties:
+          label: Contract document
+#          description: Drop a document here or click to open the file chooser...
+#          buttonLabel: Choose…
+#          buttonChangeLabel: Choose another…
+      - id: fieldsLabel
+        type: Label
+        properties:
+          title: Additional conditions
+        areas:
+          content:
+            blocks:
+              - id: fields
+                type: ControlledList
+                layout: { contentGutter: 16 }
+                properties:
+                  addItemButton:
+                    title: Add condition
+                blocks:
+                  - id: fields.$.title
+                    type: TextInput
+                    properties: { placeholder: title, label: { disabled: true } }
+                    layout: { span: 8 }
+                  - id: fields.$.content
+                    type: TextArea
+                    properties: { placeholder: content, label: { disabled: true } }
+                    layout: { span: 16 }
+
 events:
   onEnter:
     - id: link_back

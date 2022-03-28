@@ -1,6 +1,9 @@
 lowdefy: 3.23.2
 name: Lowdefy starter
 app: { html: { appendHead: <script type="module" src="/public/crypto.js"></script> } }
+types:
+  FileReader:
+    url: https://cdn.jsdelivr.net/gh/komcunbinquesgysbuf/lowdefy-blocks@1.0.2/dist/meta/FileReader.json
 connections:
   - id: mailer
     type: SendGridMail
