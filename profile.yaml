@@ -10,12 +10,21 @@ areas:
     _ref: header.yaml
   content:
     blocks:
-      - id: data
-        type: Descriptions
-        properties:
-          bordered: true
-          column: 1
-          items:
-            - { label: Name, value: { _input: name } }
-            - { label: Email address, value: { _input: mailto } }
-            - { label: Secret key, value: { _input: key } }
+#      - id: data
+#        type: Descriptions
+#        properties:
+#          bordered: true
+#          column: 1
+#          items:
+#            - { label: Name, value: { _input: name } }
+#            - { label: Email address, value: { _input: mailto } }
+#            - { label: Secret key, value: { _input: key } }
+      - id: title
+        type: Title
+        properties: { content: { _nunjucks: { template: 'Welcome back, {{name}}!', on: { name: { _input: name } } } } }
+events:
+  onEnter:
+    - id: link_back
+      type: Link
+      params: { back: true }
+      skip: { _not: { _not: { _input: key } } }
