@@ -10,14 +10,14 @@ areas:
     _ref: header.yaml
   content:
     blocks:
-      - id: data
-        type: Descriptions
-        properties:
-          bordered: true
-          column: 1
-          items:
-            - { label: input, value: { _json.stringify: { on: { _input: true } } } }
-            - { label: state, value: { _json.stringify: { on: { _state: true } } } }
+#      - id: data
+#        type: Descriptions
+#        properties:
+#          bordered: true
+#          column: 1
+#          items:
+#            - { label: input, value: { _json.stringify: { on: { _input: true } } } }
+#            - { label: state, value: { _json.stringify: { on: { _state: true } } } }
       - id: title
         type: Title
         properties: { content: { _nunjucks: { template: 'Welcome back, {{name}}!', on: { name: { _input: name } } } } }
