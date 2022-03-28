@@ -70,7 +70,12 @@ areas:
               params: { mailbox_name: { _string.replace: { on: { _state: mailto }, regex: '@.+', newSubstr: '' } } }
             - id: ensure_name
               type: SetState
-              params: { name: { _if_none: [ _state: name, _state: mailbox_name ] } }
+              params:
+                name:
+                  _if:
+                    test: { _eq: [ _if_none: [ _state: name, '' ], '' ] }
+                    then: { _state: mailbox_name }
+                    else: { _state: name }
             - id: validate_all
               type: Validate
             - id: create_aes_gcm_key
