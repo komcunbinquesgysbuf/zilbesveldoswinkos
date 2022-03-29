@@ -8,9 +8,9 @@ connections:
   - id: mailer
     type: SendGridMail
     properties: { apiKey: { _secret: SENDGRID_API_KEY }, from: { _secret: SENDGRID_FROM_ADDRESS } }
-  - id: jwt_api
+  - id: verification_api
     type: AxiosHttp
-    properties: { baseURL: { _secret: JWT_API } }
+    properties: { baseURL: { _secret: VERIFICATION_API } }
 menus:
   - id: default
     links:

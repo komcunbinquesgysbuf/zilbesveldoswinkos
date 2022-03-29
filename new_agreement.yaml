@@ -11,32 +11,38 @@ requests:
       to: { name: { _state: name }, email: { _state: mailto } }
       subject: { _nunjucks: 'Email validation for {{name}}' }
       text:
-        _nunjucks: |
-          Hi {{name}},
+        _nunjucks:
+          template: |
+            Hi {{name}},
 
-          you have started a new agreement on {{host}}
-          using your email address {{mailto}}
+            you have started a new agreement on {{host}}
+            using your email address {{mailto}}
 
-          Before you can continue, we'd like to make sure, it was really you.
+            Before you can continue, we'd like to make sure, it was really you.
 
-          Please go to {{base_url}}/confirm?{{token}}
-          and enter your key as given below.
+            Please go to {{base_url}}/confirm?{{signature}}{{initiator}}
 
-          We generated the following access key for you: {{encryption_key}}
+            and enter your key as given below.
 
-          Think of it as your password and keep it safe and secret.
+            We generated the following access key for you: {{encryption_key}}
 
-          We used this key to encrypt your personal data and can only work with
-          this data while you're logged in using that key. When you lose it, all
-          your agreement data will be lost, too. We won't be able to recover any
-          of it. That's how serious we are about your privacy.
+            Think of it as your password and keep it safe and secret.
 
-          Cheers
-          Team {{host}}
-  - id: create_token
-    type: AxiosHttp
-    connectionId: jwt_api
-    properties: { method: post, headers: { Content-Type: application/json }, data: { sub: { _state: ciphertext } } }
+            We used this key to encrypt your personal data and can only work with
+            this data while you're logged in using that key. When you lose it, all
+            your agreement data will be lost, too. We won't be able to recover any
+            of it. That's how serious we are about your privacy.
+
+            Cheers
+            Team {{host}}
+          on:
+            name: { _state: name }
+            mailto: { _state: mailto }
+            host: { _state: host }
+            base_url: { _state: base_url }
+            signature: { _hash.sha1: { _string.concat: [ _state: initiator, _secret: TOKEN_KEY ] } }
+            initiator: { _state: initiator }
+            encryption_key: { _state: encryption_key }
 areas:
   header:
     _ref: header.yaml
@@ -65,10 +71,13 @@ areas:
         properties: { icon: SendOutlined, title: Submit }
         events:
           onClick:
-            - id: extract_mailbox_name
+            - id: set_state_0
               type: SetState
-              params: { mailbox_name: { _string.replace: { on: { _state: mailto }, regex: '@.+', newSubstr: '' } } }
-            - id: ensure_name
+              params:
+                mailbox_name: { _string.replace: { on: { _state: mailto }, regex: '@.+', newSubstr: '' } }
+                host: { _location: host }
+                base_url: { _location: origin }
+            - id: set_state_1
               type: SetState
               params:
                 name:
@@ -81,30 +90,20 @@ areas:
             - id: create_aes_gcm_key
               type: JsAction
               params: { name: aesGcmCreateKey }
-            - id: encrypt_name
+            - id: encrypt_initiator
               type: JsAction
-              params: { name: aesGcmEncrypt, args: [ _state: name, _actions: create_aes_gcm_key.response ] }
-            - id: encrypt_mailto
-              type: JsAction
-              params: { name: aesGcmEncrypt, args: [ _state: mailto, _actions: create_aes_gcm_key.response ] }
-            - id: set_encryption_key
+              params:
+                name: aesGcmEncrypt
+                args:
+                  - _json.stringify:
+                      on: [ _state: name, _state: mailto ]
+                      options: { space: 0 }
+                  - _actions: create_aes_gcm_key.response
+            - id: set_state_2
               type: SetState
-              params: { encryption_key: { _actions: create_aes_gcm_key.response } }
-            - id: set_ciphertext
-              type: SetState
-              params: { ciphertext: { _array.join: { on: [ _actions: encrypt_name.response, _actions: encrypt_mailto.response ], separator: . } } }
-            - id: create_token
-              type: Request
-              params: create_token
-            - id: set_token
-              type: SetState
-              params: { token: { _string.replace: { on: { _get: { key: 0.data, from: { _actions: create_token.response } } }, regex: '^[^.]+\.', newSubstr: '' } } }
-            - id: set_host
-              type: SetState
-              params: { host: { _location: host } }
-            - id: set_base_url
-              type: SetState
-              params: { base_url: { _location: origin } }
+              params:
+                encryption_key: { _actions: create_aes_gcm_key.response }
+                initiator: { _actions: encrypt_initiator.response }
             - id: send_confirmation
               type: Request
               params: send_confirmation

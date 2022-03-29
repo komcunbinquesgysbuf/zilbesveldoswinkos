@@ -4,12 +4,21 @@ properties:
   title: Check data
   _ref: logo.yaml
 requests:
-  - id: validate_token
+  - id: generate_secret
     type: AxiosHttp
-    connectionId: jwt_api
+    connectionId: verification_api
     properties:
-      method: get
-      url: { _string.concat: [ 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.', _get: { from: { _object.keys: { _url_query: true } }, key: 0 } ] }
+      method:
+        _if:
+          test:
+            _eq:
+              - _string.substring: [ _get: { from: { _object.keys: { _url_query: true } }, key: 0 }, 0, 40 ]
+              - _hash.sha1:
+                  _string.concat:
+                    - _string.substring: [ _get: { from: { _object.keys: { _url_query: true } }, key: 0 }, 40 ]
+                    - _secret: TOKEN_KEY
+          then: options
+          else: connect
 areas:
   header:
     _ref: header.yaml
@@ -43,27 +52,20 @@ areas:
                     try:
                       - id: validate_all
                         type: Validate
-                      - id: decrypt_name
+                      - id: decrypt_initiator
                         type: JsAction
-                        params: { name: aesGcmDecrypt, args: [ _state: record_data.0, _state: secret_key ] }
+                        params: { name: aesGcmDecrypt, args: [ _state: record_data, _state: secret_key ] }
                         messages: { error: The key you entered is invalid }
-                      - id: decrypt_mailto
-                        type: JsAction
-                        params: { name: aesGcmDecrypt, args: [ _state: record_data.1, _state: secret_key ] }
-                        messages: { error: The key you entered is invalid }
-                      - id: set_decrypted_message
+                      - id: set_initiator
                         type: SetState
-                        params: { name: { _actions: decrypt_name.response } }
-                      - id: set_decrypted_message
-                        type: SetState
-                        params: { mailto: { _actions: decrypt_mailto.response } }
+                        params: { initiator: { _json.parse: { _actions: decrypt_initiator.response } } }
                       - id: link_profile
                         type: Link
                         params:
                           pageId: profile
                           input:
-                            name: { _actions: decrypt_name.response }
-                            mailto: { _actions: decrypt_mailto.response }
+                            name: { _state: initiator.0 }
+                            mailto: { _state: initiator.1 }
                             key: { _state: secret_key }
                     catch:
                       - id: reset
@@ -71,13 +73,14 @@ areas:
 events:
   onEnter:
     try:
-      - id: validate_token
+      - id: generate_secret
         type: Request
-        params: validate_token
-        messages: { error: false }
+        params: generate_secret
+        messages:
+          error: false
       - id: set_record_data
         type: SetState
-        params: { record_data: { _string.split: { on: { _get: { key: 0.data.sub, from: { _actions: validate_token.response } } }, separator: . } } }
+        params: { record_data: { _string.substring: [ _get: { from: { _object.keys: { _url_query: true } }, key: 0 }, 40 ] } }
     catch:
       - id: link_away
         type: Link
