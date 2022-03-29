@@ -22,6 +22,16 @@ pages:
   - _ref: new_agreement.yaml
   - _ref: confirm.yaml
   - _ref: profile.yaml
+  - id: healthz
+    type: Context
+    areas:
+      content:
+        blocks:
+          - id: okay
+            type: Result
+            properties:
+              status: success
+              title: Health check passed.
   - id: confirmation_sent
     type: PageSiderMenu
     properties: { title: You've got mail, _ref: logo.yaml }
