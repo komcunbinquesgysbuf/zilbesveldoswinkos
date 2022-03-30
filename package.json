@@ -1,5 +1,6 @@
 {
   "name": "zilbesveldoswinkos",
+  "type": "module",
   "dependencies": {
     "@lowdefy/server-node": "3.23.2"
   },
@@ -10,6 +11,7 @@
     "develop": "lowdefy dev",
     "init": "lowdefy init",
     "build": "lowdefy build",
+    "test": "for f in test/*.js; do node \"$f\"; done",
     "start": "lowdefy-server"
   }
 }
