@@ -1,6 +1,9 @@
 {
   "name": "zilbesveldoswinkos",
   "type": "module",
+  "engines": {
+    "node": ">=15"
+  },
   "dependencies": {
     "@lowdefy/server-node": "3.23.2"
   },
