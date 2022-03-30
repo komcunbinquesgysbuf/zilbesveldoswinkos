@@ -4,7 +4,7 @@ properties:
   title: Check data
   _ref: logo.yaml
 requests:
-  - id: generate_secret
+  - id: verify_token
     type: AxiosHttp
     connectionId: verification_api
     properties:
@@ -73,9 +73,9 @@ areas:
 events:
   onEnter:
     try:
-      - id: generate_secret
+      - id: verify_token
         type: Request
-        params: generate_secret
+        params: verify_token
         messages:
           error: false
       - id: set_record_data
