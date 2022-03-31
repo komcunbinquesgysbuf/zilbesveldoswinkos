@@ -1,5 +1,5 @@
 id: confirm
-type: PageSiderMenu
+type: Context
 properties:
   title: Check data
   _ref: logo.yaml
@@ -8,6 +8,7 @@ requests:
     type: AxiosHttp
     connectionId: verification_api
     properties:
+      url: /healthz
       method:
         _if:
           test:
@@ -17,8 +18,8 @@ requests:
                   _string.concat:
                     - _string.substring: [ _get: { from: { _object.keys: { _url_query: true } }, key: 0 }, 40 ]
                     - _secret: TOKEN_KEY
-          then: options
-          else: connect
+          then: get
+          else: reset
 areas:
   header:
     _ref: header.yaml
@@ -69,7 +70,8 @@ areas:
                             key: { _state: secret_key }
                     catch:
                       - id: reset
-                        type: Reset
+                        type: SetState
+                        params: { secret_key: null }
 events:
   onEnter:
     try:
