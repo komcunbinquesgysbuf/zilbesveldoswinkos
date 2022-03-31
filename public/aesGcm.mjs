@@ -25,3 +25,6 @@ export const aesGcmEncrypt = async (message, key) => (
         await crypto.subtle.encrypt({...algo, iv}, await importRawKey(kb), mb)
     ].map(bufferToUrl).join('')
 )(crypto.getRandomValues(new Uint8Array(12)), new TextEncoder().encode(message), urlToBuffer(key));
+
+export const base64Sha1 = async (data) => [...new Uint8Array(await crypto.subtle.digest("SHA-1", urlToBuffer(data)))]
+    .map(c => c.toString(16).padStart(2, '0')).join('');

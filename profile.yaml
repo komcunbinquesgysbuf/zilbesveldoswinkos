@@ -5,6 +5,58 @@ properties:
   _ref: logo.yaml
 layout:
   contentGutter: 16
+requests:
+  - id: encrypt_diff_key
+    type: AxiosHttp
+    connectionId: verification_api
+    properties:
+      url: { _string.concat: [/aes-gcm/encrypt/, _secret: ENCRYPTION_KEY] }
+      method: post
+      headers: { Content-Type: text/plain }
+      data: { _state: diff_key }
+  - id: send_confirmation
+    type: AxiosHttp
+    connectionId: verification_api
+    properties:
+      url: https://httpbin.org/anything
+      method: post
+      headers: { Content-Type: text/plain }
+      data:
+        _nunjucks:
+          template: |
+            Hi {{rcpt.name}},
+
+            you have received a new proposal through {{host}}
+            from {{initiator.name}} <{{initiator.mailto}}>
+
+            In order to respond to the proposal, please go to
+            {{base_url}}/approve?{{signature}}{{file_hash}}{{enc_diff_key}}={{encrypted}}
+
+            Using your key as given below you can accept or reject the proposal or
+            even engage in further negotiation.
+
+            We generated the following access key for you: {{encryption_key}}
+
+            Think of it as your password and keep it safe and secret.
+
+            We used this key to encrypt your personal data and can only work with
+            this data while you're logged in using that key. When you lose it, all
+            your agreement data will be lost, too. We won't be able to recover any
+            of it. That's how serious we are about your privacy.
+
+            Cheers
+            Team {{host}}
+          on:
+            initiator: { _input: true }
+            rcpt: { _state: rcpt }
+            mailto: { _state: rcpt.mailto }
+            host: { _state: host }
+            base_url: { _state: base_url }
+            signature: { _hash.sha1: { _string.concat: [ _state: initiator, _secret: TOKEN_KEY ] } }
+            file_hash: { _state: document.sha1 }
+            enc_diff_key: { _state: enc_diff_key }
+            encrypted: { _state: encrypted }
+            encryption_key: { _state: rcpt.key }
 areas:
   content:
     blocks:
@@ -39,9 +91,13 @@ areas:
         layout: { span: 12 }
         properties:
           label: Contract document
-#          description: Drop a document here or click to open the file chooser...
-#          buttonLabel: Choose…
-#          buttonChangeLabel: Choose another…
+          description: Drop a document up to 64kB here or click to open the file chooser...
+          buttonLabel: Choose…
+          buttonChangeLabel: Choose another…
+        validate:
+          - message: File too large.
+            status: error
+            pass: { _lte: [_string.length: { _if_none: [_state: document.data, ''] }, 88000] }
       - id: fieldsLabel
         type: Label
         properties:
@@ -56,11 +112,11 @@ areas:
                   addItemButton:
                     title: Add condition
                 blocks:
-                  - id: fields.$.title
+                  - id: fields.$.0
                     type: TextInput
                     properties: { placeholder: title, label: { disabled: true } }
                     layout: { span: 8 }
-                  - id: fields.$.content
+                  - id: fields.$.1
                     type: TextArea
                     properties: { placeholder: content, label: { disabled: true } }
                     layout: { span: 16 }
@@ -69,26 +125,87 @@ areas:
         properties: { icon: SendOutlined, title: Submit }
         events:
           onClick:
-            - id: extract_mailbox_name
-              type: SetState
-              params: { mailbox_name: { _string.replace: { on: { _state: rcpt.mailto }, regex: '@.+', newSubstr: '' } } }
-            - id: ensure_name
-              type: SetState
-              params:
-                rcpt.name:
-                  _if:
-                    test: { _eq: [ _if_none: [ _state: rcpt.name, '' ], '' ] }
-                    then: { _state: mailbox_name }
-                    else: { _state: rcpt.name }
-            - id: validate_all
-              type: Validate
-            - id: convert_document
-              type: SetState
-              params: { document.raw: { _base64.decode: { _state: document.data } } }
-            - id: hash_document
-              type: SetState
-              params: { document.sha1: { _hash.sha1: { _state: document.raw } } }
-
+            try:
+              - id: extract_mailbox_name
+                type: SetState
+                params:
+                  mailbox_name: { _string.replace: { on: { _state: rcpt.mailto }, regex: '@.+', newSubstr: '' } }
+                  host: { _location: host }
+                  base_url: { _location: origin }
+              - id: ensure_name
+                type: SetState
+                params:
+                  rcpt.name:
+                    _if:
+                      test: { _eq: [ _if_none: [ _state: rcpt.name, '' ], '' ] }
+                      then: { _state: mailbox_name }
+                      else: { _state: rcpt.name }
+              - id: validate_all
+                type: Validate
+              - id: create_aes_gcm_key
+                type: JsAction
+                params: { name: aesGcmCreateKey }
+              - id: hash_document
+                type: JsAction
+                params:
+                  name: base64Sha1
+                  args: [_state: document.data]
+              - id: create_diff_key
+                type: JsAction
+                params:
+                  name: base64UrlXor
+                  args:
+                    - _input: key
+                    - _actions: create_aes_gcm_key.response
+              - id: set_state_0
+                type: SetState
+                params: { diff_key: { _actions: create_diff_key.response } }
+              - id: encrypt_diff_key
+                type: Request
+                params: encrypt_diff_key
+              - id: set_state_1
+                type: SetState
+                params:
+                  document.sha1: { _actions: hash_document.response }
+                  rcpt.key: { _actions: create_aes_gcm_key.response }
+                  enc_diff_key: { _request: encrypt_diff_key.data }
+                  to_be_encrypted:
+                    _json.stringify:
+                      on:
+                        _array.concat:
+                          - - _input: name
+                            - _input: mailto
+                            - _state: rcpt.name
+                            - _state: rcpt.mailto
+                            - _state: document.name
+                          - _state: fields
+                      options: { space: 0 }
+              - id: encrypt_initiator
+                type: JsAction
+                params:
+                  name: aesGcmEncrypt
+                  args:
+                    - _state: to_be_encrypted
+                    - _input: key
+              - id: set_state_2
+                type: SetState
+                params:
+                  encrypted: { _actions: encrypt_initiator.response }
+              - id: send_confirmation
+                type: Request
+                params: send_confirmation
+              - id: set_state_3
+                type: SetState
+                params: { response: { _request: send_confirmation.data.data } }
+            catch:
+              - id: reset
+                type: SetState
+                params:
+                  document:
+                    _if:
+                      test: { _lte: [ _string.length: { _if_none: [ _state: document.data, '' ] }, 88000 ] }
+                      then: { _state: document }
+                      else: null
 events:
   onEnter:
     - id: link_back
