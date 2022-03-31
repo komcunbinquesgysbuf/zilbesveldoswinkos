@@ -21,10 +21,9 @@ requests:
           then: get
           else: reset
 areas:
-  header:
-    _ref: header.yaml
   content:
     blocks:
+      - _ref: header.yaml
       - id: result
         type: Result
         properties:

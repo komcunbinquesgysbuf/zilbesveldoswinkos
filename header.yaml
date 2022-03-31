@@ -1,9 +1,8 @@
-blocks:
-  - id: header
-    type: Paragraph
-    style:
-      font-size: 120%
-      '& *':
-        color: '#dfe'
-    properties:
-      content: agree-with-me.eu
+id: header
+type: Paragraph
+style:
+  text-align: right
+  '& *':
+    color: '#c33'
+properties:
+  content: agree-with-me.eu

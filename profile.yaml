@@ -1,15 +1,14 @@
 id: profile
-type: PageSiderMenu
+type: Context
 properties:
   title: Check data
   _ref: logo.yaml
 layout:
   contentGutter: 16
 areas:
-  header:
-    _ref: header.yaml
   content:
     blocks:
+      - _ref: header.yaml
       - id: title
         type: Title
         properties: { content: { _nunjucks: { template: 'Welcome back, {{name}}!', on: { name: { _input: name } } } } }

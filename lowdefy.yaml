@@ -1,6 +1,24 @@
 lowdefy: 3.23.2
 name: Lowdefy starter
-app: { html: { appendHead: <script type="module" src="/public/index.mjs"></script> } }
+app:
+  html:
+    appendHead: >
+      <script type="module" src="/public/index.mjs"></script>
+      <style>
+        :root, :root > body {
+          background-color: #123;
+          height: 100vh;
+        }
+        #root {
+          background-color: #123;
+          background-image: url(/public/20220331-paper-sheet-for-agree-with-me.png);
+          background-size: cover;
+          background-position: right bottom;
+          min-height: 94vh;
+          margin: 3vh 6vh;
+          padding: 24px 24px 72px 24px;
+        }
+      </style>
 types:
   FileReader:
     url: https://cdn.jsdelivr.net/gh/komcunbinquesgysbuf/lowdefy-blocks@1.0.3/dist/meta/FileReader.json
@@ -27,19 +45,19 @@ pages:
     areas:
       content:
         blocks:
+          - _ref: header.yaml
           - id: okay
             type: Result
             properties:
               status: success
               title: Health check passed.
   - id: confirmation_sent
-    type: PageSiderMenu
+    type: Context
     properties: { title: You've got mail, _ref: logo.yaml }
     areas:
-      header:
-        _ref: header.yaml
       content:
         blocks:
+          - _ref: header.yaml
           - id: success_msg
             type: Result
             properties:
@@ -48,13 +66,12 @@ pages:
               subTitle: Please check your inbox and follow the instructions given in the email to continue.
               title: The email was sent
   - id: token_error
-    type: PageSiderMenu
+    type: Context
     properties: { title: Invalid token, _ref: logo.yaml }
     areas:
-      header:
-        _ref: header.yaml
       content:
         blocks:
+          - _ref: header.yaml
           - id: error_msg
             type: Result
             properties:

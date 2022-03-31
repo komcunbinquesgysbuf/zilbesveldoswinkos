@@ -1,5 +1,5 @@
 id: new_agreement
-type: PageSiderMenu
+type: Context
 properties: { title: Start a new Agreement, _ref: logo.yaml }
 layout:
   contentGutter: 16
@@ -44,10 +44,9 @@ requests:
             initiator: { _state: initiator }
             encryption_key: { _state: encryption_key }
 areas:
-  header:
-    _ref: header.yaml
   content:
     blocks:
+      - _ref: header.yaml
       - id: title
         type: Title
         properties: { content: Start a new Agreement, level: 1 }
